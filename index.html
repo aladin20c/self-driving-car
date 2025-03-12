@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matter.js with Sidebar</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #sidebar {
+      width: 20%;
+      background-color: #2c3e50;
+      color: white;
+      padding: 20px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+
+    #sidebar h2 {
+      margin-top: 0;
+    }
+
+    #sidebar label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+
+    #sidebar input[type="range"] {
+      width: 100%;
+    }
+
+    #sidebar button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    #sidebar button:hover {
+      background-color: #2980b9;
+    }
+
+    #canvas-container {
+      width: 80%;
+      height: 100vh;
+      background-color: #ecf0f1;
+    }
+
+    #canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <h2>Controls</h2>
+
+    <!-- Speed Slider -->
+    <label for="speed">Speed: <span id="speed-value">0.5</span></label>
+    <input type="range" id="speed" min="0.1" max="2" step="0.1" value="0.5">
+
+    <!-- Turn Speed Slider -->
+    <label for="turn-speed">Turn Speed: <span id="turn-speed-value">0.05</span></label>
+    <input type="range" id="turn-speed" min="0.01" max="0.1" step="0.01" value="0.05">
+
+    <!-- Friction Slider -->
+    <label for="friction">Friction: <span id="friction-value">0.1</span></label>
+    <input type="range" id="friction" min="0" max="1" step="0.1" value="0.1">
+
+    <!-- Ray Spacing Slider -->
+    <label for="ray-spacing">Ray Spacing: <span id="ray-spacing-value">20</span></label>
+    <input type="range" id="ray-spacing" min="10" max="50" step="1" value="20">
+
+    <!-- Number of Rays Slider -->
+    <label for="num-rays">Number of Rays: <span id="num-rays-value">5</span></label>
+    <input type="range" id="num-rays" min="1" max="10" step="1" value="5">
+
+    <!-- Flash Back Button -->
+    <button id="flash-back">Flash Back</button>
+
+    <!-- Save Track Button -->
+    <button id="save-track">Save Track</button>
+
+    <!-- Choose Track Dropdown -->
+    <label for="choose-track">Choose Track:</label>
+    <select id="choose-track">
+      <option value="track1">Track 1</option>
+      <option value="track2">Track 2</option>
+      <option value="track3">Track 3</option>
+    </select>
+  </div>
+
+  <!-- Canvas Container -->
+  <div id="canvas-container">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <!-- Matter.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+
+  <script src="app.js"></script>
+</body>
+</html>
