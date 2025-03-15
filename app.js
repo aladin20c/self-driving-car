@@ -54,8 +54,8 @@
     /**********************GAME OBJECTS**************************/
     /***********************************************************/   
 
-    const SPEED = 0.5; // Acceleration/deceleration speed
-    const TURN_SPEED = 0.05; // Steering speed
+    let SPEED = 0.5; // Acceleration/deceleration speed
+    let TURN_SPEED = 0.05; // Steering speed
     
     const car = Bodies.rectangle(400, 300, 80, 40, {
         isStatic: false,
@@ -143,9 +143,9 @@
 /*********************Camera and Raycasting******************/
 /***********************************************************/
 
+let NUM_RAYS = 5;
+let ANGLE_OFFSET = Math.PI / 6; 
 function performRaycastingAndDraw(rayLength = 300) {
-    const numRays = 5;
-    const angleOffset = Math.PI / 6;
     const carAngle = car.angle;
     const frontOffset = 10;
     const frontX = car.position.x + Math.cos(carAngle) * frontOffset;
@@ -154,9 +154,9 @@ function performRaycastingAndDraw(rayLength = 300) {
     let rayAngle = carAngle;
     let tmp = 1;
     
-    for (let i = 0; i < numRays; i++) {
+    for (let i = 0; i < NUM_RAYS; i++) {
         
-        rayAngle = rayAngle  + (i * angleOffset) * tmp;
+        rayAngle = rayAngle  + (i * ANGLE_OFFSET) * tmp;
         tmp = -tmp;
         const start = { x: frontX, y: frontY };
         const end = {
@@ -351,4 +351,108 @@ render.canvas.addEventListener('mouseout', () => {
 
 
 
+/**************************CONTROLS**************************/
+/***********************************************************/
 
+
+
+const speedSlider = document.getElementById('speed');
+const speedValue = document.getElementById('speed-value');
+speedSlider.addEventListener('input', () => {
+  SPEED = parseFloat(speedSlider.value);
+  speedValue.textContent = SPEED;
+});
+
+
+// Turn Speed Slider
+const turnSpeedSlider = document.getElementById('turn-speed');
+const turnSpeedValue = document.getElementById('turn-speed-value');
+turnSpeedSlider.addEventListener('input', () => {
+  TURN_SPEED = parseFloat(turnSpeedSlider.value);
+  turnSpeedValue.textContent = TURN_SPEED;
+});
+
+// Friction Slider
+const frictionSlider = document.getElementById('friction');
+const frictionValue = document.getElementById('friction-value');
+frictionSlider.addEventListener('input', () => {
+  const FRICTION = parseFloat(frictionSlider.value);
+  frictionValue.textContent = FRICTION;
+  // Update friction for all bodies (example)
+  car.frictionAir = FRICTION;
+});
+
+
+
+// Number of Rays Slider
+const numRaysSlider = document.getElementById('num-rays');
+const numRaysValue = document.getElementById('num-rays-value');
+numRaysSlider.addEventListener('input', () => {
+  NUM_RAYS = parseInt(numRaysSlider.value);
+  numRaysSlider.value = NUM_RAYS;
+  numRaysValue.textContent = NUM_RAYS;
+  // Update spacing based on new number of rays
+  ANGLE_OFFSET = Math.PI / (NUM_RAYS + 1);
+  const valueInDegrees = Math.ceil( ANGLE_OFFSET * 180 / Math.PI )
+  raySpacingSlider.value = valueInDegrees;
+  raySpacingValue.textContent = valueInDegrees;
+});
+
+// Ray Spacing Slider
+const raySpacingSlider = document.getElementById('ray-spacing');
+const raySpacingValue = document.getElementById('ray-spacing-value');
+raySpacingSlider.addEventListener('input', () => {
+  const newValue = raySpacingSlider.value;
+  ANGLE_OFFSET = parseInt(newValue) * Math.PI / 180;
+  raySpacingSlider.value = newValue;
+  raySpacingValue.textContent = newValue;
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*/ Ray Spacing Slider
+const raySpacingSlider = document.getElementById('ray-spacing');
+const raySpacingValue = document.getElementById('ray-spacing-value');
+raySpacingSlider.addEventListener('input', () => {
+  RAY_SPACING = parseInt(raySpacingSlider.value);
+  raySpacingValue.textContent = RAY_SPACING;
+});
+
+// Number of Rays Slider
+const numRaysSlider = document.getElementById('num-rays');
+const numRaysValue = document.getElementById('num-rays-value');
+numRaysSlider.addEventListener('input', () => {
+  NUM_RAYS = parseInt(numRaysSlider.value);
+  numRaysValue.textContent = NUM_RAYS;
+});
+
+// Flash Back Button
+document.getElementById('flash-back').addEventListener('click', () => {
+  Body.setPosition(car, { x: 400, y: 200 });
+  Body.setVelocity(car, { x: 0, y: 0 });
+  Body.setAngularVelocity(car, 0);
+});
+
+// Save Track Button
+document.getElementById('save-track').addEventListener('click', () => {
+  alert('Track saved!');
+  // Add your save track logic here
+});
+
+// Choose Track Dropdown
+document.getElementById('choose-track').addEventListener('change', (event) => {
+  const selectedTrack = event.target.value;
+  alert(`Selected track: ${selectedTrack}`);
+  // Add your track switching logic here
+});
+*/

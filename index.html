@@ -66,27 +66,33 @@
 <body>
   <!-- Sidebar -->
   <div id="sidebar">
+    <h2>Self Driving Car</h2>
     <h2>Controls</h2>
 
     <!-- Speed Slider -->
     <label for="speed">Speed: <span id="speed-value">0.5</span></label>
-    <input type="range" id="speed" min="0.1" max="2" step="0.1" value="0.5">
+    <input type="range" id="speed" min="0.1" max="1" step="0.1" value="0.5">
 
     <!-- Turn Speed Slider -->
     <label for="turn-speed">Turn Speed: <span id="turn-speed-value">0.05</span></label>
     <input type="range" id="turn-speed" min="0.01" max="0.1" step="0.01" value="0.05">
 
     <!-- Friction Slider -->
-    <label for="friction">Friction: <span id="friction-value">0.1</span></label>
-    <input type="range" id="friction" min="0" max="1" step="0.1" value="0.1">
-
-    <!-- Ray Spacing Slider -->
-    <label for="ray-spacing">Ray Spacing: <span id="ray-spacing-value">20</span></label>
-    <input type="range" id="ray-spacing" min="10" max="50" step="1" value="20">
+    <label for="friction">Car Air Friction: <span id="friction-value">0.1</span></label>
+    <input type="range" id="friction" min="0" max="1" step="0.05" value="0.1">
 
     <!-- Number of Rays Slider -->
     <label for="num-rays">Number of Rays: <span id="num-rays-value">5</span></label>
     <input type="range" id="num-rays" min="1" max="10" step="1" value="5">
+
+    <!-- Ray Spacing Slider -->
+    <label for="ray-spacing">Ray Spacing: <span id="ray-spacing-value">30</span></label>
+    <input type="range" id="ray-spacing" min="10" max="180" step="10" value="30">
+
+
+
+
+
 
     <!-- Flash Back Button -->
     <button id="flash-back">Flash Back</button>
