@@ -62,6 +62,7 @@
         density: 0.08,
         friction: 0.3,
         frictionAir: 0.1,
+        angle: -Math.PI / 2,
         render: {
             fillStyle: 'blue'
         },
@@ -75,33 +76,18 @@
     World.add(world, car);
     
     // Create road sides (rectangles)
-    const roadSides = [
-        // Left side
-        Bodies.rectangle(200, 300, 20, 400, {
-            isStatic: true,
-            collisionFilter: {
-                category: STATIC_CATEGORY,
-                mask: DYNAMIC_CATEGORY // Can only collide with dynamic bodies
-            },
-            render: {
-                fillStyle: 'gray'
-            }
-        }),
-        // Right side
-        Bodies.rectangle(600, 300, 20, 400, {
-            isStatic: true,
-            collisionFilter: {
-                category: STATIC_CATEGORY,
-                mask: DYNAMIC_CATEGORY // Can only collide with dynamic bodies
-            },
-            render: {
-                fillStyle: 'gray'
-            }
-        })
-    ];
+    let roadSides = [];
     
     // Add road sides to the world
     World.add(world, roadSides);
+
+
+  function resetcarPosition() {
+    Body.setPosition(car, { x: 400, y: 300 });
+    Body.setAngle(car, -Math.PI / 2);
+    Body.setVelocity(car, { x: 0, y: 0 });
+    Body.setAngularVelocity(car, 0);
+  }
     
 
     // Update car movement
@@ -253,6 +239,8 @@ Events.on(render, 'afterRender', () => {
 window.addEventListener('resize', () => {
     render.canvas.width = canvas.clientWidth;
     render.canvas.height = canvas.clientHeight;
+    const centerX = car.position.x - render.options.width / 2;
+    const centerY = car.position.y - render.options.height / 2;
     Render.lookAt(render, {
         min: { x: centerX, y: centerY },
         max: { x: centerX + render.options.width, y: centerY + render.options.height }
@@ -273,6 +261,7 @@ let angle = 0;
 let isDragging = false;
 let startPos = null;
 let currentRoad = null;
+let previousRoad = null;
 const ROAD_WIDTH = 20; // Fixed width of the road side
 
 // Mouse events for click-and-drag
@@ -313,6 +302,7 @@ render.canvas.addEventListener('mousemove', (event) => {
                 mask: DYNAMIC_CATEGORY // Can only collide with dynamic bodies
             }
         });
+        currentRoad.realLength = length;
 
         // Add the road side to the world (temporarily)
         World.add(world, currentRoad);
@@ -410,49 +400,103 @@ raySpacingSlider.addEventListener('input', () => {
 
 
 
+/**************************Json**************************/
+/***********************************************************/
 
 
+function getTrackData(trackId) {
+  const scriptElement = document.getElementById(trackId);
+  if (scriptElement) {
+    return JSON.parse(scriptElement.textContent);
+  }
+  alert('Track data not found!');
+  return [];
+}
 
 
+function loadTrack(JsonData){
+  World.remove(world, roadSides);
+  resetcarPosition();
 
+  roadSides = JsonData.map(data =>{
+    let side = Bodies.rectangle(data.position.x, data.position.y, data.length,ROAD_WIDTH, {
+      isStatic: true,
+      angle: data.angle,
+      collisionFilter: {
+        category: STATIC_CATEGORY,
+        mask: DYNAMIC_CATEGORY
+      },
+      render: {
+        fillStyle: 'gray'
+      }
+    })
+    side.realLength = data.length;
+    return side;
+  }
+  );
+  World.add(world, roadSides);
+  console.log('Track with '+ roadSides.length +' sides loaded successfully!');
+}
 
-
-
-
-
-/*/ Ray Spacing Slider
-const raySpacingSlider = document.getElementById('ray-spacing');
-const raySpacingValue = document.getElementById('ray-spacing-value');
-raySpacingSlider.addEventListener('input', () => {
-  RAY_SPACING = parseInt(raySpacingSlider.value);
-  raySpacingValue.textContent = RAY_SPACING;
+const trackList = document.getElementById('choose-track');
+trackList.addEventListener('change', async (event) => {
+  const trackName = event.target.value;
+  if (trackName === 'custom') {return;}
+  loadTrack(getTrackData(trackName));
 });
 
-// Number of Rays Slider
-const numRaysSlider = document.getElementById('num-rays');
-const numRaysValue = document.getElementById('num-rays-value');
-numRaysSlider.addEventListener('input', () => {
-  NUM_RAYS = parseInt(numRaysSlider.value);
-  numRaysValue.textContent = NUM_RAYS;
-});
+
 
 // Flash Back Button
 document.getElementById('flash-back').addEventListener('click', () => {
-  Body.setPosition(car, { x: 400, y: 200 });
-  Body.setVelocity(car, { x: 0, y: 0 });
-  Body.setAngularVelocity(car, 0);
+  if(!isDragging){
+    World.remove(world, roadSides.pop());
+  }
 });
 
 // Save Track Button
 document.getElementById('save-track').addEventListener('click', () => {
-  alert('Track saved!');
-  // Add your save track logic here
+  const roadData = roadSides.map(side => {
+    return ({ 
+      position: { x: side.position.x, y: side.position.y },
+      length: side.realLength,
+      angle: side.angle
+    });
+  });
+  const blob = new Blob([JSON.stringify(roadData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'track.json';
+  a.click();
+  URL.revokeObjectURL(url);
 });
 
-// Choose Track Dropdown
-document.getElementById('choose-track').addEventListener('change', (event) => {
-  const selectedTrack = event.target.value;
-  alert(`Selected track: ${selectedTrack}`);
-  // Add your track switching logic here
+
+document.getElementById('construct-track').addEventListener('click', () => {
+  // Remove existing road sides
+  World.remove(world, roadSides);
+  resetcarPosition();
+  roadSides = [];
+  World.add(world, roadSides);
+
+  loadTrack(getTrackData('track'));
+  trackList.value = 'track';
 });
-*/
+
+
+
+
+document.getElementById('load-track').addEventListener('click', () => {
+  const input = document.getElementById('file-input');
+  const file = input.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = JSON.parse(e.target.result); // Parse JSON
+      loadTrack(data); // Use the parsed JSON data
+    };
+    reader.readAsText(file); // Read file as text
+    trackList.value = 'custom';
+  }
+});
