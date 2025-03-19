@@ -443,7 +443,11 @@ trackList.addEventListener('change', async (event) => {
   const trackName = event.target.value;
   if (trackName === 'custom') {return;}
   loadTrack(getTrackData(trackName));
+  canvas.click();
+  canvas.focus();
 });
+loadTrack(getTrackData("track"));
+trackList.value = 'track';
 
 
 
@@ -452,6 +456,7 @@ document.getElementById('flash-back').addEventListener('click', () => {
   if(!isDragging){
     World.remove(world, roadSides.pop());
   }
+  canvas.focus();
 });
 
 // Save Track Button
@@ -470,6 +475,7 @@ document.getElementById('save-track').addEventListener('click', () => {
   a.download = 'track.json';
   a.click();
   URL.revokeObjectURL(url);
+  canvas.focus();
 });
 
 
@@ -482,6 +488,7 @@ document.getElementById('construct-track').addEventListener('click', () => {
 
   loadTrack(getTrackData('track'));
   trackList.value = 'track';
+  canvas.focus();
 });
 
 
@@ -498,5 +505,6 @@ document.getElementById('load-track').addEventListener('click', () => {
     };
     reader.readAsText(file); // Read file as text
     trackList.value = 'custom';
+    canvas.focus();
   }
 });

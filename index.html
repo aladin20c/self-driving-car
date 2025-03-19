@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Matter.js with Sidebar</title>
+  
   <style>
     body {
       margin: 0;
@@ -61,6 +62,65 @@
       height: 100%;
       display: block;
     }
+
+  .form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    color: #ffffff;
+    padding: 10px;
+  }
+
+/* Styled Dropdown */
+.styled-dropdown {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 10px;
+}
+
+.styled-dropdown:hover {
+  border-color: #007bff;
+}
+
+.styled-dropdown:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+  outline: none;
+}
+
+/* Styled File Input */
+.styled-file-input {
+  width: 94%;
+  padding: 5px;
+  font-size: 12px;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+  margin-top: 5px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.styled-file-input:hover {
+  border-color: #007bff;
+}
+
+.styled-file-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+  outline: none;
+}
+
+
+
   </style>
 </head>
 <body>
@@ -104,8 +164,8 @@
     <button id="construct-track">Construct Track</button>
 
     <!-- Choose Track Dropdown -->
-    <label for="choose-track">Choose Track:</label>
-    <select id="choose-track">
+    <label for="choose-track" class="form-label">Choose Track:</label>
+    <select id="choose-track" class="styled-dropdown">
       <option value="track">Basic</option>
       <option value="track-1">Track 1</option>
       <option value="track-2">Track 2</option>
@@ -114,7 +174,7 @@
     </select>
 
 
-    <input type="file" id="file-input" accept="application/json">
+    <input type="file" id="file-input" class="styled-file-input" accept="application/json">
     <button id="load-track">Load Track</button>
   </div>
 
@@ -126,10 +186,7 @@
 
   <!-- Matter.js Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-
-  <script src="app.js"></script>
-
-
+  
   <script id="track" type="application/json">
     [
     {"position": {"x": 399.5,"y": 410},"length": 335.0537270349339,"angle": -0.017908533000527332},
@@ -137,6 +194,11 @@
     {"position": {"x": 561.5,"y": 187.5},"length": 455.02747169813824,"angle": 1.559807758112163}
     ]
   </script>
+  
+  <script src="app.js"></script>
+
+
+
 
 
 
