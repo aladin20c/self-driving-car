@@ -19,20 +19,35 @@
         ArrowLeft: false,
         ArrowRight: false
     };
+
+    const activeKeys = new Set();
   
-      // Keydown event listener
-      window.addEventListener('keydown', (event) => {
-        if (keys.hasOwnProperty(event.key)) {
+    window.addEventListener('keydown', (event) => {
+      
+      if (keys.hasOwnProperty(event.key) && !activeKeys.has(event.key)) {
           keys[event.key] = true;
-        }
-      });
+          activeKeys.add(event.key);
+          event.preventDefault();
+      }
+  });
   
-      // Keyup event listener
-      window.addEventListener('keyup', (event) => {
-        if (keys.hasOwnProperty(event.key)) {
+  window.addEventListener('keyup', (event) => {
+      if (keys.hasOwnProperty(event.key)) {
           keys[event.key] = false;
-        }
-      });
+          activeKeys.delete(event.key);
+          event.preventDefault();
+      }
+  });
+  
+  window.addEventListener('blur', () => {
+      for (const key in keys) {
+          keys[key] = false;
+      }
+      activeKeys.clear();
+  });
+  
+
+
 
     /**********************RENDERER******************************/
     /***********************************************************/
@@ -50,13 +65,24 @@
       }
     });
 
+    document.getElementById('canvas-container').addEventListener('click', () => {
+      canvas.focus();
+    });
+
+    window.addEventListener('load', () => {
+      canvas.focus();
+    });
+
+    canvas.setAttribute('tabindex', '0');
+    canvas.style.outline = 'none';
+
 
     /**********************GAME OBJECTS**************************/
     /***********************************************************/   
 
     let SPEED = 0.5; // Acceleration/deceleration speed
     let TURN_SPEED = 0.05; // Steering speed
-    
+    const MIN_TURN_SPEED = 10;         // Speed below which turning is reduced (pixels/frame)
     const car = Bodies.rectangle(400, 300, 80, 40, {
         isStatic: false,
         density: 0.08,
@@ -107,15 +133,24 @@
         });
       }
 
-      // Turning (only when left or right keys are pressed)
-      if ((keys.ArrowUp || keys.ArrowDown) && keys.ArrowLeft) {
-        Body.setAngularVelocity(car, -TURN_SPEED);
-      } else if ((keys.ArrowUp || keys.ArrowDown) && keys.ArrowRight) {
-        Body.setAngularVelocity(car, TURN_SPEED);
+      const currentSpeed = Body.getSpeed(car);
+      
+      if (currentSpeed > 0.1 && (keys.ArrowLeft || keys.ArrowRight)) {
+
+        let targetTurnRate = 0;
+        if (keys.ArrowLeft) {
+          targetTurnRate = -TURN_SPEED;
+        } else {
+          targetTurnRate = TURN_SPEED;
+        }
+      
+        const speedFactor = Math.min(1, currentSpeed /MIN_TURN_SPEED);
+        targetTurnRate *= speedFactor;
+        Body.setAngularVelocity(car,targetTurnRate);
       } else {
-        // Stop turning when no keys are pressed
         Body.setAngularVelocity(car, 0);
       }
+      
     });
 
     // Run the engine
@@ -131,7 +166,8 @@
 
 let NUM_RAYS = 5;
 let ANGLE_OFFSET = Math.PI / 6; 
-function performRaycastingAndDraw(rayLength = 300) {
+const RAY_LENGTH = 300;
+function performRaycastingAndDraw(RAY_LENGTH = 300) {
     const carAngle = car.angle;
     const frontOffset = 10;
     const frontX = car.position.x + Math.cos(carAngle) * frontOffset;
@@ -146,15 +182,15 @@ function performRaycastingAndDraw(rayLength = 300) {
         tmp = -tmp;
         const start = { x: frontX, y: frontY };
         const end = {
-            x: start.x + Math.cos(rayAngle) * rayLength,
-            y: start.y + Math.sin(rayAngle) * rayLength
+            x: start.x + Math.cos(rayAngle) * RAY_LENGTH,
+            y: start.y + Math.sin(rayAngle) * RAY_LENGTH
         };
 
 
         
         const staticBodies = roadSides;
         let closestHitPoint = end;
-        let closestDistance = rayLength;
+        let closestDistance = RAY_LENGTH;
 
         
         for(const body of roadSides){
@@ -177,7 +213,7 @@ function performRaycastingAndDraw(rayLength = 300) {
                     }
                 }
             }
-            if(closestDistance<rayLength){
+            if(closestDistance<RAY_LENGTH){
                 break;  // Stop checking other bodies !!!!!!!!!
             }
         };
