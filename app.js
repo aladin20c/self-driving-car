@@ -84,6 +84,7 @@
     let TURN_SPEED = 0.05; // Steering speed
     const MIN_TURN_SPEED = 10;         // Speed below which turning is reduced (pixels/frame)
     const car = Bodies.rectangle(400, 300, 80, 40, {
+        label: 'car',
         isStatic: false,
         density: 0.08,
         friction: 0.3,
@@ -114,64 +115,67 @@
     Body.setVelocity(car, { x: 0, y: 0 });
     Body.setAngularVelocity(car, 0);
   }
+
+  function moveCar(up,down,left,right) {
+    if (up) {
+      Body.setVelocity(car, {
+        x: Math.cos(car.angle) * SPEED * 10,
+        y: Math.sin(car.angle) * SPEED * 10
+      });
+    }
+
+    if (down) {
+      Body.setVelocity(car, {
+        x: -Math.cos(car.angle) * SPEED * 10,
+        y: -Math.sin(car.angle) * SPEED * 10
+      });
+    }
+
+    const currentSpeed = Body.getSpeed(car);
+    
+    if (currentSpeed > 0.1 && (left || right)) {
+
+      let targetTurnRate = 0;
+      if (left) {
+        targetTurnRate = -TURN_SPEED;
+      } else {
+        targetTurnRate = TURN_SPEED;
+      }
+    
+      const speedFactor = Math.min(1, currentSpeed /MIN_TURN_SPEED);
+      targetTurnRate *= speedFactor;
+      Body.setAngularVelocity(car,targetTurnRate);
+    } else {
+      Body.setAngularVelocity(car, 0);
+    }
+  }
     
 
-    // Update car movement
-    Events.on(engine, 'beforeUpdate', () => {
-      // Acceleration and deceleration
-      if (keys.ArrowUp) {
-        Body.setVelocity(car, {
-          x: Math.cos(car.angle) * SPEED * 10,
-          y: Math.sin(car.angle) * SPEED * 10
-        });
-      }
-
-      if (keys.ArrowDown) {
-        Body.setVelocity(car, {
-          x: -Math.cos(car.angle) * SPEED * 10,
-          y: -Math.sin(car.angle) * SPEED * 10
-        });
-      }
-
-      const currentSpeed = Body.getSpeed(car);
-      
-      if (currentSpeed > 0.1 && (keys.ArrowLeft || keys.ArrowRight)) {
-
-        let targetTurnRate = 0;
-        if (keys.ArrowLeft) {
-          targetTurnRate = -TURN_SPEED;
-        } else {
-          targetTurnRate = TURN_SPEED;
-        }
-      
-        const speedFactor = Math.min(1, currentSpeed /MIN_TURN_SPEED);
-        targetTurnRate *= speedFactor;
-        Body.setAngularVelocity(car,targetTurnRate);
-      } else {
-        Body.setAngularVelocity(car, 0);
-      }
-      
-    });
-
-    // Run the engine
-    Engine.run(engine);
-
-    // Run the renderer
-    Render.run(render);
+    
 
 
 
 /*********************Camera and Raycasting******************/
 /***********************************************************/
-
+let LEARNING = false;
 let NUM_RAYS = 5;
+let distance = 0;
 let ANGLE_OFFSET = Math.PI / 6; 
 const RAY_LENGTH = 300;
-function performRaycastingAndDraw(RAY_LENGTH = 300) {
+let BEAM_DISTANCES = Array(NUM_RAYS).fill(RAY_LENGTH);
+
+let BEAMS_START = null;
+let BEAMS = Array(NUM_RAYS).fill(null);
+let COLLIDED = false;
+
+
+function performRaycasting() {
     const carAngle = car.angle;
     const frontOffset = 10;
     const frontX = car.position.x + Math.cos(carAngle) * frontOffset;
     const frontY = car.position.y + Math.sin(carAngle) * frontOffset;
+    const start = { x: frontX, y: frontY };
+    BEAMS_START = start;
     
     let rayAngle = carAngle;
     let tmp = 1;
@@ -180,17 +184,19 @@ function performRaycastingAndDraw(RAY_LENGTH = 300) {
         
         rayAngle = rayAngle  + (i * ANGLE_OFFSET) * tmp;
         tmp = -tmp;
-        const start = { x: frontX, y: frontY };
         const end = {
             x: start.x + Math.cos(rayAngle) * RAY_LENGTH,
             y: start.y + Math.sin(rayAngle) * RAY_LENGTH
         };
+        
 
 
         
         const staticBodies = roadSides;
         let closestHitPoint = end;
+        BEAMS[i] = closestHitPoint ;
         let closestDistance = RAY_LENGTH;
+        BEAM_DISTANCES[i] = closestDistance;
 
         
         for(const body of roadSides){
@@ -209,7 +215,9 @@ function performRaycastingAndDraw(RAY_LENGTH = 300) {
 
                     if (distance < closestDistance) {
                         closestDistance = distance;
+                        BEAM_DISTANCES[i] = closestDistance;
                         closestHitPoint = hit;
+                        BEAMS[i] = closestHitPoint;
                     }
                 }
             }
@@ -227,6 +235,23 @@ function performRaycastingAndDraw(RAY_LENGTH = 300) {
         ctx.stroke();
     }
 }
+
+function drawRays() {
+    if (!BEAMS_START) return;
+    const ctx = render.context;
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < NUM_RAYS; i++) {
+      if (!BEAMS[i]) continue;
+      ctx.moveTo(BEAMS_START.x - render.bounds.min.x, BEAMS_START.y - render.bounds.min.y);
+      ctx.lineTo(BEAMS[i].x - render.bounds.min.x, BEAMS[i].y - render.bounds.min.y);
+    }
+    ctx.stroke();
+}
+
+
+
 
 // Function to compute exact intersection point between a ray and a line segment
 function getRaySegmentIntersection(rayStart, rayEnd, segStart, segEnd) {
@@ -252,6 +277,52 @@ function getRaySegmentIntersection(rayStart, rayEnd, segStart, segEnd) {
     return null; // No valid intersection
 }
 
+
+
+
+
+
+
+
+
+let currentDecision=2;
+
+
+// Update car movement
+Events.on(engine, 'beforeUpdate', async   () => {
+  if(!LEARNING){
+    performRaycasting();
+    moveCar(keys.ArrowUp, keys.ArrowDown, keys.ArrowLeft, keys.ArrowRight);
+    return;
+  }
+
+
+
+  if(COLLIDED){
+    trainModel(BEAM_DISTANCES, currentDecision, -5);
+    resetcarPosition();
+    COLLIDED = false;      
+  }else{
+    performRaycasting();
+    currentDecision = decideAction(BEAM_DISTANCES);
+    if(currentDecision == 0){
+      moveCar(true, false, true, false);
+    }else if(currentDecision == 1){
+      moveCar(true, false, false, true);
+    }else{
+      moveCar(true, false, false, false);
+    }
+    trainModel(BEAM_DISTANCES, currentDecision, 0.1);
+  }
+  
+});
+
+// Run the engine
+Matter.Runner.run(engine)
+
+// Run the renderer
+Render.run(render);
+
 // Center the camera on the car
 Events.on(render, 'afterRender', () => {
     const centerX = car.position.x - render.options.width / 2;
@@ -268,8 +339,26 @@ Events.on(render, 'afterRender', () => {
         min: { x: centerX, y: centerY },
         max: { x: centerX + render.options.width, y: centerY + render.options.height }
     });
-    performRaycastingAndDraw();
+    drawRays();
 });
+
+
+
+
+Events.on(engine, 'collisionStart', event => {
+  const pairs = event.pairs;
+
+  for (let i = 0; i < pairs.length; i++) {
+      const { bodyA, bodyB } = pairs[i];
+
+      if (bodyA.label === 'car' || bodyB.label === 'car') {
+          COLLIDED = true;
+          break;
+      }
+  }
+});
+
+
 
 // Handle window resizing
 window.addEventListener('resize', () => {
@@ -422,6 +511,7 @@ numRaysSlider.addEventListener('input', () => {
   const valueInDegrees = Math.ceil( ANGLE_OFFSET * 180 / Math.PI )
   raySpacingSlider.value = valueInDegrees;
   raySpacingValue.textContent = valueInDegrees;
+  BEAM_DISTANCES = Array(NUM_RAYS).fill(RAY_LENGTH);
 });
 
 // Ray Spacing Slider
@@ -471,7 +561,6 @@ function loadTrack(JsonData){
   }
   );
   World.add(world, roadSides);
-  console.log('Track with '+ roadSides.length +' sides loaded successfully!');
 }
 
 const trackList = document.getElementById('choose-track');
@@ -542,5 +631,21 @@ document.getElementById('load-track').addEventListener('click', () => {
     reader.readAsText(file); // Read file as text
     trackList.value = 'custom';
     canvas.focus();
+  }
+});
+
+
+
+const startButton = document.getElementById('start');
+
+startButton.addEventListener('click', () => {
+  if (LEARNING) {
+    startButton.classList.remove('abort');
+    startButton.textContent = 'Start Learning!';
+    LEARNING = false;
+  } else {
+    startButton.classList.add('abort');
+    startButton.textContent = 'Abort Learning';
+    LEARNING = true;
   }
 });

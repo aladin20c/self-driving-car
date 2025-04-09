@@ -110,3 +110,23 @@ border-color: #007bff;
 box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
 outline: none;
 }
+
+
+
+#start {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background-color: green;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#start.abort {
+  background-color: red;
+}
