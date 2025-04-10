@@ -280,6 +280,29 @@ function getRaySegmentIntersection(rayStart, rayEnd, segStart, segEnd) {
 
 
 
+function computeReward(beamDistances) {
+  const forward = beamDistances[0];
+  const leftBeams = beamDistances.filter((_, i) => i % 2 === 1);
+  const rightBeams = beamDistances.filter((_, i) => i % 2 === 0 && i !== 0);
+
+  const avgLeft = leftBeams.reduce((a, b) => a + b, 0) / leftBeams.length;
+  const avgRight = rightBeams.reduce((a, b) => a + b, 0) / rightBeams.length;
+
+  // 1. Encourage forward motion
+  const forwardReward = forward / RAY_LENGTH; // Normalize based on max range
+
+  // 2. Encourage balance between left and right
+  const sideBalance = 1 - Math.abs(avgLeft - avgRight) / RAY_LENGTH; // 1 when balanced, 0 when skewed
+
+  // 3. Penalize being too close to any wall
+  const minDist = Math.min(...beamDistances);
+  const proximityPenalty = minDist < 50 ? -1 : 0;
+
+  // Total reward
+  const reward = 0.5 * forwardReward + 0.5 * sideBalance + 1 * proximityPenalty;
+
+  return reward;
+}
 
 
 
@@ -299,7 +322,7 @@ Events.on(engine, 'beforeUpdate', async   () => {
 
 
   if(COLLIDED){
-    trainModel(BEAM_DISTANCES, currentDecision, -5);
+    trainModel(BEAM_DISTANCES, currentDecision, -10);
     resetcarPosition();
     COLLIDED = false;      
   }else{
@@ -312,7 +335,7 @@ Events.on(engine, 'beforeUpdate', async   () => {
     }else{
       moveCar(true, false, false, false);
     }
-    trainModel(BEAM_DISTANCES, currentDecision, 0.1);
+    trainModel(BEAM_DISTANCES, currentDecision, computeReward(BEAM_DISTANCES));
   }
   
 });
