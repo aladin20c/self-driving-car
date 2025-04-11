@@ -299,7 +299,7 @@ function computeReward(beamDistances) {
   const proximityPenalty = minDist < 50 ? -1 : 0;
 
   // Total reward
-  const reward = 0.5 * forwardReward + 0.5 * sideBalance + 1 * proximityPenalty;
+  const reward = -1 * (1-forwardReward) + 0.5 * sideBalance + 1 * proximityPenalty;
 
   return reward;
 }
