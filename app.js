@@ -305,29 +305,40 @@ function computeReward(beamDistances) {
 }
 
 
+let lastReward = 0;
+let lastDecision = 2;
 
+let lastbeams = [...BEAM_DISTANCES];
 
-
+let currentReward = 0;
 let currentDecision=2;
+
 
 
 // Update car movement
 Events.on(engine, 'beforeUpdate', async   () => {
   if(!LEARNING){
-    performRaycasting();
     moveCar(keys.ArrowUp, keys.ArrowDown, keys.ArrowLeft, keys.ArrowRight);
+    performRaycasting();
     return;
   }
-
 
 
   if(COLLIDED){
     trainModel(BEAM_DISTANCES, currentDecision, -10);
     resetcarPosition();
-    COLLIDED = false;      
+    COLLIDED = false;
+    
+    lastReward = 0.33;
+    lastDecision = 2;
+    currentReward = 0.33;
+    currentDecision=2;
   }else{
-    performRaycasting();
+
+    
     currentDecision = decideAction(BEAM_DISTANCES);
+
+
     if(currentDecision == 0){
       moveCar(true, false, true, false);
     }else if(currentDecision == 1){
@@ -335,7 +346,13 @@ Events.on(engine, 'beforeUpdate', async   () => {
     }else{
       moveCar(true, false, false, false);
     }
-    trainModel(BEAM_DISTANCES, currentDecision, computeReward(BEAM_DISTANCES));
+    performRaycasting();
+    currentReward =  computeReward(BEAM_DISTANCES);
+    trainModel(lastbeams, currentDecision,currentReward-lastReward);
+    
+    lastReward = currentReward;
+    lastDecision = currentDecision;
+    lastbeams = [...BEAM_DISTANCES];
   }
   
 });
