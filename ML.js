@@ -45,17 +45,14 @@
   }
 
 
-  function trainModel(beamDistances, actionIndex, rewardDelta) {
+  function trainModel(beamDistances, actionIndex, rewardDiff) {
     const inputs = tf.tensor2d([beamDistances]);
+    
+    // Create a softer target array
+    const targetArray = [0.33, 0.33, 0.33]; // baseline uniform confidence
+    targetArray[actionIndex] = Math.min(1, Math.max(0, 0.33 + rewardDiff)); // nudge up/down
   
-    const prediction = model.predict(inputs);
-    const outputValues = prediction.dataSync();
-    const targetsArray = [...outputValues];
-  
-    targetsArray[actionIndex] += rewardDelta;
-    targetsArray[actionIndex] = Math.max(0, Math.min(1, targetsArray[actionIndex])); // clamp between 0-1
-  
-    const targets = tf.tensor2d([targetsArray]);
+    const targets = tf.tensor2d([targetArray]);
   
     model.fit(inputs, targets, {
       epochs: 1,
@@ -64,13 +61,13 @@
     }).then(() => {
       inputs.dispose();
       targets.dispose();
-      prediction.dispose();
-    }).catch(err => {
-      console.error("Training error:", err);
+    }).catch((error) => {
+      console.error('Error during training:', error);
       inputs.dispose();
       targets.dispose();
-      prediction.dispose();
     });
+  
+    
   }
 
 

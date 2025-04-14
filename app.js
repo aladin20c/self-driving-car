@@ -315,6 +315,9 @@ let currentDecision=2;
 
 
 
+
+
+
 // Update car movement
 Events.on(engine, 'beforeUpdate', async   () => {
   if(!LEARNING){
@@ -348,8 +351,10 @@ Events.on(engine, 'beforeUpdate', async   () => {
     }
     performRaycasting();
     currentReward =  computeReward(BEAM_DISTANCES);
-    trainModel(lastbeams, currentDecision,currentReward-lastReward);
-    
+    const delta = diff = Math.tanh((currentReward-lastReward) * 10); 
+    trainModel(lastbeams, currentDecision,delta);
+
+    console.log(delta);
     lastReward = currentReward;
     lastDecision = currentDecision;
     lastbeams = [...BEAM_DISTANCES];
